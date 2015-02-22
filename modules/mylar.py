@@ -10,38 +10,79 @@ from cherrypy.lib.auth2 import require
 from urllib import urlencode
 from json import loads
 from htpc.proxy import get_image
+from htpc.helpers import fix_basepath
 
+# http://localhost:8090/api?apikey=4ddb6b0f7414b6391be6efbc45ba087e&cmd=getIndex
+#https://github.com/evilhero/mylar/blob/master/API_REFERENCE
 
-class Headphones(object):
+class Mylar(object):
     def __init__(self):
-        self.logger = logging.getLogger('modules.headphones')
+        self.logger = logging.getLogger('modules.mylar')
         htpc.MODULES.append({
-            'name': 'Headphones',
-            'id': 'headphones',
-            'test': htpc.WEBDIR + 'headphones/ping',
+            'name': 'Mylar',
+            'id': 'mylar',
+            'test': htpc.WEBDIR + 'mylar/ping',
             'fields': [
-                {'type': 'bool', 'label': 'Enable', 'name': 'headphones_enable'},
-                {'type': 'text', 'label': 'Menu name', 'name': 'headphones_name'},
-                {'type': 'text', 'label': 'IP / Host *', 'name': 'headphones_host'},
-                {'type': 'text', 'label': 'Port *', 'name': 'headphones_port'},
-                {'type': 'text', 'label': 'Basepath', 'name': 'headphones_basepath'},
-                {'type': 'text', 'label': 'API key', 'name': 'headphones_apikey'},
-                {'type': 'bool', 'label': 'Use SSL', 'name': 'headphones_ssl'},
+                {'type': 'bool', 'label': 'Enable', 'name': 'mylar_enable'},
+                {'type': 'text', 'label': 'Menu name', 'name': 'mylar_name'},
+                {'type': 'text', 'label': 'IP / Host *', 'name': 'mylar_host'},
+                {'type': 'text', 'label': 'Port *', 'name': 'mylar_port'},
+                {'type': 'text', 'label': 'Basepath', 'name': 'mylar_basepath'},
+                {'type': 'text', 'label': 'API key', 'name': 'mylar_apikey'},
+                {'type': 'bool', 'label': 'Use SSL', 'name': 'mylar_ssl'},
             ]
         })
+
+    # Get index
+    """
+    [
+    {
+        "not_updated_db": null,
+        "QUALtype": null,
+        "ComicYear": null,
+        "Description": null,
+        "LatestDate": null,
+        "Status": "Loading",
+        "ComicName": "Comic ID: 79847",
+        "ComicPublished": null,
+        "ComicVersion": null,
+        "DetailURL": null,
+        "ComicPublisher": null,
+        "QUALquality": null,
+        "ComicID": "79847",
+        "LatestIssue": null,
+        "ComicName_Filesafe": null,
+        "ComicLocation": null,
+        "UseFuzzy": null,
+        "SortOrder": null,
+        "ComicSortName": null,
+        "QUALscanner": null,
+        "QUALalt_vers": null,
+        "ForceContinuing": null,
+        "DateAdded": null,
+        "IncludeExtras": null,
+        "LastUpdated": null,
+        "Have": null,
+        "Total": null,
+        "ComicImage": null,
+        "AlternateSearch": null
+    }
+]
+    """
+
 
     @cherrypy.expose()
     @require()
     def index(self):
-        template = htpc.LOOKUP.get_template('headphones.html')
+        template = htpc.LOOKUP.get_template('mylar.html')
         settings = htpc.settings
         url = self._build_url()
 
         return template.render(
-            scriptname='headphones',
+            scriptname='mylar',
             settings=settings,
             url=url,
-            name=settings.get('headphones_name', 'Headphones')
+            name=settings.get('mylar_name', 'mylar')
         )
 
     @cherrypy.expose()
@@ -59,27 +100,27 @@ class Headphones(object):
 
     @cherrypy.expose()
     @require()
-    def viewArtist(self, artist_id):
+    def viewcomic(self, artist_id):
         response = self.fetch('getArtist&id=%s' % artist_id)
 
         for a in response['albums']:
             a['StatusText'] = _get_status_icon(a['Status'])
             a['can_download'] = True if a['Status'] not in ('Downloaded', 'Snatched', 'Wanted') else False
 
-        template = htpc.LOOKUP.get_template('headphones_view_artist.html')
+        template = htpc.LOOKUP.get_template('mylar_view_comic.html')
         return template.render(
-            scriptname='headphones_view_artist',
+            scriptname='mylar_view_artist',
             artist_id=artist_id,
             artist=response['artist'][0],
             artistimg=response['artist'][0]['ArtworkURL'],
             albums=response['albums'],
             description=response['description'][0],
-            module_name=htpc.settings.get('headphones_name') or 'Headphones',
+            module_name=htpc.settings.get('mylar_name', 'Mylar')
         )
 
     @cherrypy.expose()
     @require()
-    def viewAlbum(self, album_id):
+    def viewissue(self, album_id):
         response = self.fetch('getAlbum&id=%s' % album_id)
 
         tracks = response['tracks']
@@ -91,13 +132,13 @@ class Headphones(object):
             t['DurationText'] = '%d:%02d' % (minutes, seconds)
             t['TrackStatus'] = _get_status_icon('Downloaded' if t['Location'] is not None else '')
 
-        template = htpc.LOOKUP.get_template('headphones_view_album.html')
+        template = htpc.LOOKUP.get_template('mylar_view_album.html')
         return template.render(
-            scriptname='headphones_view_album',
+            scriptname='mylar_view_album',
             artist_id=response['album'][0]['ArtistID'],
             album_id=album_id,
             albumimg=response['album'][0]['ArtworkURL'],
-            module_name=htpc.settings.get('headphones_name', 'Headphones'),
+            module_name=htpc.settings.get('mylar_name', 'mylar'),
             album=response['album'][0],
             tracks=response['tracks'],
             description=response['description'][0]
@@ -105,16 +146,11 @@ class Headphones(object):
 
     @staticmethod
     def _build_url(ssl=None, host=None, port=None, base_path=None):
-        ssl = ssl or htpc.settings.get('headphones_ssl')
-        host = host or htpc.settings.get('headphones_host')
-        port = port or htpc.settings.get('headphones_port')
-        base_path = base_path or htpc.settings.get('headphones_basepath')
+        ssl = ssl or htpc.settings.get('mylar_ssl')
+        host = host or htpc.settings.get('mylar_host')
+        port = port or htpc.settings.get('mylar_port')
+        path = fix_basepath(htpc.settings.get('mylar_basepath', '/'))
 
-        path = base_path or '/'
-        if path.startswith('/') is False:
-            path = '/' + path
-        if path.endswith('/') is False:
-            path += '/'
 
         url = '{protocol}://{host}:{port}{path}'.format(
             protocol='https' if ssl else 'http',
@@ -128,8 +164,8 @@ class Headphones(object):
     @staticmethod
     def _build_api_url(command, url=None, api_key=None):
         return '{url}api?apikey={api_key}&cmd={command}'.format(
-            url=url or Headphones._build_url(),
-            api_key=api_key or htpc.settings.get('headphones_apikey'),
+            url=url or Mylar._build_url(),
+            api_key=api_key or htpc.settings.get('mylar_apikey'),
             command=command,
         )
 
@@ -137,7 +173,7 @@ class Headphones(object):
     @cherrypy.expose()
     @cherrypy.tools.json_out()
     @require()
-    def GetArtistList(self):
+    def getserieslist(self):
         return self.fetch('getIndex')
 
     @cherrypy.expose()
@@ -258,7 +294,7 @@ class Headphones(object):
         return self.fetch('download_specific_release&id=%s&title=%s&size=%s&url=%s&provider=%s&kind=%s' %(id, title, size, url, provider, kind))
 
     def fetch(self, command, url=None, api_key=None, img=False, json=True, text=False):
-        url = Headphones._build_api_url(command, url, api_key)
+        url = Mylar._build_api_url(command, url, api_key)
 
         try:
             # So shitty api..
@@ -269,7 +305,7 @@ class Headphones(object):
             response = requests.get(url, timeout=30, verify=False)
 
             if response.status_code != 200:
-                self.logger.error('failed to contact headphones')
+                self.logger.error('failed to contact mylar')
                 return
 
             if text:
@@ -291,20 +327,20 @@ class Headphones(object):
     @cherrypy.expose()
     @require()
     def ping(self,
-             headphones_enable, headphones_name,
-             headphones_host, headphones_port,
-             headphones_basepath,
-             headphones_apikey,
-             headphones_ssl=False):
+             mylar_enable, mylar_name,
+             mylar_host, mylar_port,
+             mylar_basepath,
+             mylar_apikey,
+             mylar_ssl=False):
 
         url = self._build_url(
-            headphones_ssl,
-            headphones_host,
-            headphones_port,
-            headphones_basepath,
+            mylar_ssl,
+            mylar_host,
+            mylar_port,
+            mylar_basepath,
         )
 
-        return self.fetch('getVersion', url, headphones_apikey)
+        return self.fetch('getVersion', url, mylar_apikey)
 
 
 def _get_status_icon(status):

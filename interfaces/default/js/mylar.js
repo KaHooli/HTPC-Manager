@@ -18,7 +18,7 @@ $(document).ready(function () {
         cancelAddArtist();
     });
 
-    $('.headphones_forceprocess').click(function(e) {
+    $('.mylar_forceprocess').click(function(e) {
         e.preventDefault();
         Postprocess();
     });
@@ -38,7 +38,7 @@ function searchForAlbum(albumId, name) {
     showModal('Searching for album "'+ name + '"', modalcontent, {});
 
     $.ajax({
-        url: WEBDIR + 'headphones/QueueAlbum?albumId=' + albumId,
+        url: WEBDIR + 'mylar/QueueAlbum?albumId=' + albumId,
         type: 'get',
         dataType: 'json',
         timeout: 40000,
@@ -73,7 +73,7 @@ function beginRefreshArtist(artistId) {
 function refreshArtist(artistId) {
 
     $.ajax({
-        url: WEBDIR + 'headphones/RefreshArtist',
+        url: WEBDIR + 'mylar/RefreshArtist',
         type: 'post',
         data: {'artistId': artistId},
         dataType: 'json',
@@ -88,7 +88,7 @@ function refreshArtist(artistId) {
 
 function searchForArtist(name, type) {
     $.ajax({
-        url: WEBDIR + 'headphones/SearchForArtist',
+        url: WEBDIR + 'mylar/SearchForArtist',
         type: 'get',
         data: {'name': name,
                 'searchtype': type},
@@ -148,7 +148,7 @@ function addArtist(id, searchtype, name) {
     // val can be artistId or albumId
     var stype = (searchtype === 'artistId') ? 'Artist' : 'Album';
     $.ajax({
-        url: WEBDIR + 'headphones/AddArtist',
+        url: WEBDIR + 'mylar/AddArtist',
         data: {'id': id,
                'searchtype': searchtype},
         type: 'get',
@@ -171,7 +171,7 @@ function cancelAddArtist() {
 
 function loadArtists() {
     $.ajax({
-        url: WEBDIR + 'headphones/GetArtistList',
+        url: WEBDIR + 'mylar/getserieslist',
         type: 'get',
         dataType: 'json',
         success: function (result) {
@@ -183,7 +183,7 @@ function loadArtists() {
                 $.each(result, function (index, artist) {
                     var image = $('<img>').addClass('img-polaroid img-rounded artistimgtab')
                     var name = $('<a>')
-                        .attr('href',WEBDIR + 'headphones/viewArtist/' + artist.ArtistID)
+                        .attr('href',WEBDIR + 'mylar/viewArtist/' + artist.ArtistID)
                         .text(artist.ArtistName);
                     var row = $('<tr>')
 
@@ -193,7 +193,7 @@ function loadArtists() {
                     }
 
                     var $statusRow = $('<td>')
-                        .html(headphonesStatusLabel(artist.Status));
+                        .html(mylarStatusLabel(artist.Status));
 
                     if (isError) {
                         $statusRow.click(function () {
@@ -202,7 +202,7 @@ function loadArtists() {
                     }
 
                     if (artist.ThumbURL) {
-                        image.attr('src', WEBDIR + 'headphones/GetThumb/?thumb=' + artist.ThumbURL)
+                        image.attr('src', WEBDIR + 'mylar/GetThumb/?thumb=' + artist.ThumbURL)
 
                     } else {
                         image.attr('src', '../img/no-cover-artist.png').css({'width' : '64px' , 'height' : '64px'}) //TODO
@@ -230,7 +230,7 @@ function loadWanteds() {
     // Clear it incase off reload
     $('#wanted_table_body').empty();
     $.ajax({
-        url: WEBDIR + 'headphones/GetWantedList',
+        url: WEBDIR + 'mylar/GetWantedList',
         type: 'get',
         dataType: 'json',
         success: function (result) {
@@ -243,7 +243,7 @@ function loadWanteds() {
                     var row = $('<tr>');
                     var image = $('<img>').addClass('img-polaroid img-rounded')
                     if (wanted.ThumbURL) {
-                        image.attr('src', WEBDIR + 'headphones/GetThumb/?w=150&h=150&thumb=' + encodeURIComponent(wanted.ThumbURL))
+                        image.attr('src', WEBDIR + 'mylar/GetThumb/?w=150&h=150&thumb=' + encodeURIComponent(wanted.ThumbURL))
 
                     } else {
                         image.attr('src', '../img/no-cover-artist.png').css({'width' : '75px' , 'height' : '75px'})
@@ -253,7 +253,7 @@ function loadWanteds() {
                     //var buttons = $('<div>').addClass('btn-group')
                     var remove = $('<a class="btn btn-mini btn-cancel" title="Set Skipped"><i class="icon-step-forward"></i></a></td>').click(function () {
                                 $.ajax({
-                                    url: WEBDIR + 'headphones/UnqueueAlbum',
+                                    url: WEBDIR + 'mylar/UnqueueAlbum',
                                     data: {'albumId': wanted.AlbumID},
                                     type: 'get',
                                     complete: function (result) {
@@ -264,7 +264,7 @@ function loadWanteds() {
                             })
                     var search = $('<a class="btn btn-mini" title="Set wanted"><i class="icon-heart"></i></a></td>').click(function () {
                                 $.ajax({
-                                    url: WEBDIR + 'headphones/QueueAlbum',
+                                    url: WEBDIR + 'mylar/QueueAlbum',
                                     data: {'albumId': wanted.AlbumID},
                                     type: 'get',
                                     complete: function (result) {
@@ -274,7 +274,7 @@ function loadWanteds() {
                             })
                     var force = $('<a class="btn btn-mini" title="Force Check"><i class="icon-search"></i></a></td>').click(function () {
                                 $.ajax({
-                                    url: WEBDIR + 'headphones/QueueAlbum&new=True',
+                                    url: WEBDIR + 'mylar/QueueAlbum&new=True',
                                     data: {'albumId': wanted.AlbumID},
                                     type: 'get',
                                     complete: function (result) {
@@ -288,22 +288,22 @@ function loadWanteds() {
                     row.append(
                         $('<td>').append(
                             $('<a>')
-                                .addClass('headphones_wanted_artistname')
-                                .attr('href', WEBDIR + 'headphones/viewArtist/' + wanted.ArtistID)
+                                .addClass('mylar_wanted_artistname')
+                                .attr('href', WEBDIR + 'mylar/viewArtist/' + wanted.ArtistID)
                                 .text(wanted.ArtistName)),
                         $('<td>').append(
                             $('<a>')
-                                .addClass('headphones_wanted_artistalbum')
-                                .attr('href', WEBDIR + 'headphones/viewAlbum/' + wanted.AlbumID)
+                                .addClass('mylar_wanted_artistalbum')
+                                .attr('href', WEBDIR + 'mylar/viewAlbum/' + wanted.AlbumID)
                                 .text(wanted.AlbumTitle)),
                         $('<td>').text(wanted.ReleaseDate),
-                        $('<td>').append(headphonesStatusLabel(wanted.Status)),
+                        $('<td>').append(mylarStatusLabel(wanted.Status)),
                         $('<td>').append(div)
                         /*
                         $('<td><a class="btn btn-mini"><i class="icon-remove-circle"></i></a></td>')
 
 
-                                $.get(WEBDIR + 'headphones/UnqueueAlbum', {'albumId': wanted.AlbumID}, function(r) {
+                                $.get(WEBDIR + 'mylar/UnqueueAlbum', {'albumId': wanted.AlbumID}, function(r) {
                                     alert(r);
                                     if (r === "OK") {
                                         $(this).closest('tr').remove();
@@ -325,7 +325,7 @@ function loadWanteds() {
 
 function loadHistory() {
     $.ajax({
-        url: WEBDIR + 'headphones/GetHistoryList',
+        url: WEBDIR + 'mylar/GetHistoryList',
         type: 'get',
         dataType: 'json',
         success: function(result) {
@@ -339,7 +339,7 @@ function loadHistory() {
                 row.append(
                     $('<td>').html(item.DateAdded),
                     $('<td>').html(item.Title),
-                    $('<td>').html(headphonesStatusLabel(item.Status))
+                    $('<td>').html(mylarStatusLabel(item.Status))
                 );
                 $('#history_table_body').append(row);
             });
@@ -349,7 +349,7 @@ function loadHistory() {
 
 function loadHistory() {
     $.ajax({
-        url: WEBDIR + 'headphones/GetHistoryList',
+        url: WEBDIR + 'mylar/GetHistoryList',
         type: 'get',
         dataType: 'json',
         success: function(result) {
@@ -363,7 +363,7 @@ function loadHistory() {
                 row.append(
                     $('<td>').html(item.DateAdded),
                     $('<td>').html(item.Title),
-                    $('<td>').html(headphonesStatusLabel(item.Status))
+                    $('<td>').html(mylarStatusLabel(item.Status))
                 );
                 $('#history_table_body').append(row);
             });
@@ -371,7 +371,7 @@ function loadHistory() {
     });
 }
 
-function headphonesStatusLabel(text) {
+function mylarStatusLabel(text) {
     var statusOK = ['Active', 'Downloaded', 'Processed'];
     var statusInfo = ["Wanted"];
     var statusError = ['Paused', 'Unprocessed'];
@@ -389,7 +389,7 @@ function headphonesStatusLabel(text) {
         label.addClass('label-warning');
     }
 
-    var icon = headphonesStatusIcon(text, true);
+    var icon = mylarStatusIcon(text, true);
     if (icon !== '') {
         label.prepend(' ').prepend(icon);
     }
@@ -397,7 +397,7 @@ function headphonesStatusLabel(text) {
 }
 
 
-var headphonesStatusMap = {
+var mylarStatusMap = {
     'Active': 'icon-repeat',
     'Error': 'icon-bell',
     'Paused': 'icon-pause',
@@ -407,8 +407,8 @@ var headphonesStatusMap = {
     'Processed': 'icon-ok',
     'Unprocessed': 'icon-exclamation-sign'
 }
-function headphonesStatusIcon(iconText, white){
-    var iconClass = headphonesStatusMap[iconText];
+function mylarStatusIcon(iconText, white){
+    var iconClass = mylarStatusMap[iconText];
 
     if (typeof iconClass == 'undefined') {
         return;
@@ -428,12 +428,12 @@ function Postprocess() {
     if (p || p.length >= 0) {
         data.dir = p;
 
-        $.get(WEBDIR + 'headphones/ForceProcess', data, function(r) {
+        $.get(WEBDIR + 'mylar/ForceProcess', data, function(r) {
             state = (r.length) ? 'success' : 'error';
             // Stop the notify from firing on cancel
             if (p !== null) {
                 path = (p.length === 0) ? 'Default folder' : p;
-                notify('Headphones', 'Postprocess ' + path, state);
+                notify('mylar', 'Postprocess ' + path, state);
             }
         });
 
