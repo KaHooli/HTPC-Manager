@@ -101,29 +101,29 @@ class Mylar(object):
     @cherrypy.expose()
     @require()
     def viewcomic(self, artist_id):
-        response = self.fetch('getArtist&id=%s' % artist_id)
+        response = self.fetch('getComic&id=%s' % artist_id)
 
-        for a in response['albums']:
+        for a in response['comic']:
             a['StatusText'] = _get_status_icon(a['Status'])
             a['can_download'] = True if a['Status'] not in ('Downloaded', 'Snatched', 'Wanted') else False
 
         template = htpc.LOOKUP.get_template('mylar_view_comic.html')
         return template.render(
             scriptname='mylar_view_artist',
-            artist_id=artist_id,
-            artist=response['artist'][0],
-            artistimg=response['artist'][0]['ArtworkURL'],
-            albums=response['albums'],
-            description=response['description'][0],
+            comic_id=artist_id,
+            comic=response['comic'][0],
+            comicimg=response['comic'][0]['ComicImage'],
+            issues=response['issues'],
+            description=response['comic'][0]['Description'],
             module_name=htpc.settings.get('mylar_name', 'Mylar')
         )
 
     @cherrypy.expose()
     @require()
     def viewissue(self, album_id):
-        response = self.fetch('getAlbum&id=%s' % album_id)
+        response = self.fetch('getIssueInfo&id=%s' % album_id)
 
-        tracks = response['tracks']
+        tracks = response['issues']
         for t in tracks:
             duration = t['TrackDuration']
             total_seconds = duration / 1000
@@ -174,6 +174,7 @@ class Mylar(object):
     @cherrypy.tools.json_out()
     @require()
     def getserieslist(self):
+        print self.fetch('getIndex', json=True)
         return self.fetch('getIndex')
 
     @cherrypy.expose()
@@ -315,6 +316,9 @@ class Mylar(object):
                 result = response.content
 
             if json:
+                # Shitty
+                #result = response.text
+                #result = loads(response.text)
                 result = response.json()
 
             self.logger.debug('Response: %s' % result)

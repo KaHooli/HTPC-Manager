@@ -1,21 +1,21 @@
 $(document).ready(function () {
     $(window).trigger('hashchange');
-    loadArtists();
+    loadcomics();
     loadWanteds();
     loadHistory();
 
-    $('#add_artist_button').click(function () {
+    $('#add_comic_button').click(function () {
         $(this).attr('disabled', true);
-        searchForArtist($('#add_artist_name').val(), $('#add_artist_album').find('option:selected').val());
+        searchForcomic($('#add_comic_name').val(), $('#add_comic_album').find('option:selected').val());
     });
 
-    $('#add_artistid_button').click(function () {
-        addArtist($('#add_artist_select').val(), $('#add_artist_album').find('option:selected').val(), $('#add_artist_select').find('option:selected').text())
+    $('#add_comicid_button').click(function () {
+        addcomic($('#add_comic_select').val(), $('#add_comic_album').find('option:selected').val(), $('#add_comic_select').find('option:selected').text())
 
     });
 
-    $('#cancel_artist_button').click(function () {
-        cancelAddArtist();
+    $('#cancel_comic_button').click(function () {
+        cancelAddcomic();
     });
 
     $('.mylar_forceprocess').click(function(e) {
@@ -26,7 +26,7 @@ $(document).ready(function () {
     $('#album-tracks .btn-search').click(function () {
         var $parentRow = $(this).parents('tr')
         var albumId = $parentRow.attr('data-albumid');
-        var name = $(this).parents('tr').find('.artist').text();
+        var name = $(this).parents('tr').find('.comic').text();
         searchForAlbum(albumId, name);
     })
 });
@@ -59,36 +59,36 @@ function searchForAlbum(albumId, name) {
     });
 }
 
-function beginRefreshArtist(artistId) {
-    var $div = $('div').html('Refreshing artist');
+function beginRefreshcomic(comicId) {
+    var $div = $('div').html('Refreshing comic');
     var $buttons = {
         'Refresh': function () {
-            beginRefreshArtist(artistId);
+            beginRefreshcomic(comicId);
         }
     }
 
-    showModal('Refresh artist?', $div, $buttons);
+    showModal('Refresh comic?', $div, $buttons);
 }
 
-function refreshArtist(artistId) {
+function refreshcomic(comicId) {
 
     $.ajax({
-        url: WEBDIR + 'mylar/RefreshArtist',
+        url: WEBDIR + 'mylar/Refreshcomic',
         type: 'post',
-        data: {'artistId': artistId},
+        data: {'comicId': comicId},
         dataType: 'json',
         success: function (result) {
 
         },
         error: function (req) {
-            console.log('error refreshing artist');
+            console.log('error refreshing comic');
         }
     })
 }
 
-function searchForArtist(name, type) {
+function searchForcomic(name, type) {
     $.ajax({
-        url: WEBDIR + 'mylar/SearchForArtist',
+        url: WEBDIR + 'mylar/SearchForcomic',
         type: 'get',
         data: {'name': name,
                 'searchtype': type},
@@ -96,19 +96,19 @@ function searchForArtist(name, type) {
         timeout: 40000,
         success: function (result) {
             if (!result || result.length === 0) {
-                $('#add_artist_button').attr('disabled', false);
+                $('#add_comic_button').attr('disabled', false);
                 return;
             }
             // remove any old search
-            $('#add_artist_select').html('');
+            $('#add_comic_select').html('');
 
-            if (type == 'artistId') {
+            if (type == 'comicId') {
                 $.each(result, function (index, item) {
                     var option = $('<option>')
                     .attr('value', item.id)
                     .html(item.uniquename);
 
-                    $('#add_artist_select').append(option);
+                    $('#add_comic_select').append(option);
                 });
 
             } else {
@@ -120,7 +120,7 @@ function searchForArtist(name, type) {
                     } else {
                         tt = '  '
                     }
-                    // item.uniquename == Artist name
+                    // item.uniquename == comic name
                     if (item.uniquename === 'None') {
                         // to remove None..
                         item.uniquename = ''
@@ -129,47 +129,47 @@ function searchForArtist(name, type) {
                         .attr('value', item.albumid)
                         .html(item.title + tt + item.uniquename);
 
-                    $('#add_artist_select').append(option);
+                    $('#add_comic_select').append(option);
                 });
             }
 
 
 
-            $('#add_artist_name').hide();
-            $('#cancel_artist_button').show();
-            $('#add_artist_select').fadeIn();
-            $('#add_artist_button').attr('disabled', false).hide();
-            $('#add_artistid_button').show();
+            $('#add_comic_name').hide();
+            $('#cancel_comic_button').show();
+            $('#add_comic_select').fadeIn();
+            $('#add_comic_button').attr('disabled', false).hide();
+            $('#add_comicid_button').show();
         }
     })
 }
 
-function addArtist(id, searchtype, name) {
-    // val can be artistId or albumId
-    var stype = (searchtype === 'artistId') ? 'Artist' : 'Album';
+function addcomic(id, searchtype, name) {
+    // val can be comicId or albumId
+    var stype = (searchtype === 'comicId') ? 'comic' : 'Album';
     $.ajax({
-        url: WEBDIR + 'mylar/AddArtist',
+        url: WEBDIR + 'mylar/Addcomic',
         data: {'id': id,
                'searchtype': searchtype},
         type: 'get',
         dataType: 'json',
         success: function (data) {
-            $('#add_artist_name').val('');
+            $('#add_comic_name').val('');
             notify('Add ' + stype, 'Successfully added  '+ stype + ' ' + name, 'success');
-            cancelAddArtist();
+            cancelAddcomic();
         }
     })
 }
 
-function cancelAddArtist() {
-    $('#add_artist_select').hide();
-    $('#cancel_artist_button').hide();
-    $('#add_artist_name').fadeIn();
-    $('#add_artistid_button').hide();
-    $('#add_artist_button').show();
+function cancelAddcomic() {
+    $('#add_comic_select').hide();
+    $('#cancel_comic_button').hide();
+    $('#add_comic_name').fadeIn();
+    $('#add_comicid_button').hide();
+    $('#add_comic_button').show();
 }
 
-function loadArtists() {
+function loadcomics() {
     $.ajax({
         url: WEBDIR + 'mylar/getserieslist',
         type: 'get',
@@ -177,50 +177,51 @@ function loadArtists() {
         success: function (result) {
             if (result.length == 0) {
                 var row = $('<tr>')
-                row.append($('<td>').html('No artists found'));
-                $('#artists_table_body').append(row);
+                row.append($('<td>').html('No comics found'));
+                $('#comics_table_body').append(row);
             } else {
-                $.each(result, function (index, artist) {
-                    var image = $('<img>').addClass('img-polaroid img-rounded artistimgtab')
+                $.each(result, function (index, comic) {
+                    var image = $('<img>').addClass('img-polaroid img-rounded comicimgtab')
                     var name = $('<a>')
-                        .attr('href',WEBDIR + 'mylar/viewArtist/' + artist.ArtistID)
-                        .text(artist.ArtistName);
+                        .attr('href',WEBDIR + 'mylar/viewcomic/' + comic.ComicID)
+                        .text(comic.ComicName);
                     var row = $('<tr>')
 
-                    var isError = artist.ArtistName.indexOf('Fetch failed') != -1;
+                    var isError = comic.ComicName.indexOf('Fetch failed') != -1;
                     if (isError) {
-                        artist.Status = 'Error';
+                        comic.Status = 'Error';
                     }
 
                     var $statusRow = $('<td>')
-                        .html(mylarStatusLabel(artist.Status));
+                        .html(mylarStatusLabel(comic.Status));
 
                     if (isError) {
                         $statusRow.click(function () {
-                            beginRefreshArtist(artist.ArtistID);
+                            beginRefreshcomic(comic.ComicID);
                         });
                     }
 
-                    if (artist.ThumbURL) {
-                        image.attr('src', WEBDIR + 'mylar/GetThumb/?thumb=' + artist.ThumbURL)
+                    if (comic.ThumbURL) {
+                        // ComicImage
+                        //image.attr('src', WEBDIR + 'mylar/GetThumb/?thumb=' + comic.ThumbURL)
 
                     } else {
-                        image.attr('src', '../img/no-cover-artist.png').css({'width' : '64px' , 'height' : '64px'}) //TODO
+                        image.attr('src', '../img/no-cover-comic.png').css({'width' : '64px' , 'height' : '64px'}) //TODO
 
                     }
 
-                    var div = $('<div>').addClass("artistthumbdiv").append(image)
+                    var div = $('<div>').addClass("comicthumbdiv").append(image)
                     row.append(
                         $('<td>').append(div),
                         $('<td>').html(name),
-                        $('<td>').append(artist.LatestAlbum),
-                        $('<td>').append(artist.ReleaseDate),
+                        $('<td>').append(comic.LatestAlbum),
+                        $('<td>').append(comic.ReleaseDate),
                         $statusRow
                     );
-                    $('#artists_table_body').append(row);
+                    $('#comics_table_body').append(row);
                 });
-                $('#artists_table_body').parent().trigger('update');
-                $('#artists_table_body').parent().trigger("sorton",[[[0,0]]]);
+                $('#comics_table_body').parent().trigger('update');
+                $('#comics_table_body').parent().trigger("sorton",[[[0,0]]]);
             }
         }
     });
@@ -234,19 +235,21 @@ function loadWanteds() {
         type: 'get',
         dataType: 'json',
         success: function (result) {
+
             if (result.length == 0) {
                 var row = $('<tr>')
-                row.append($('<td>').attr('colspan', '5').html('No wanted albums found'));
+                row.append($('<td>').attr('colspan', '5').html('No wanted issues found'));
                 $('#wanted_table_body').append(row);
             } else {
                 $.each(result, function (index, wanted) {
+                    console.log(wanted)
                     var row = $('<tr>');
                     var image = $('<img>').addClass('img-polaroid img-rounded')
                     if (wanted.ThumbURL) {
                         image.attr('src', WEBDIR + 'mylar/GetThumb/?w=150&h=150&thumb=' + encodeURIComponent(wanted.ThumbURL))
 
                     } else {
-                        image.attr('src', '../img/no-cover-artist.png').css({'width' : '75px' , 'height' : '75px'})
+                        image.attr('src', '../img/no-cover-comic.png').css({'width' : '75px' , 'height' : '75px'})
 
                     }
 
@@ -254,31 +257,31 @@ function loadWanteds() {
                     var remove = $('<a class="btn btn-mini btn-cancel" title="Set Skipped"><i class="icon-step-forward"></i></a></td>').click(function () {
                                 $.ajax({
                                     url: WEBDIR + 'mylar/UnqueueAlbum',
-                                    data: {'albumId': wanted.AlbumID},
+                                    data: {'albumId': wanted.ComicID},
                                     type: 'get',
                                     complete: function (result) {
                                         loadWanteds()
-                                        notify('Set Skipped', wanted.ArtistName + ' - ' + wanted.AlbumTitle);
+                                        notify('Set Skipped', wanted.ComicName + ' - ' + wanted.IssueName);
                                     }
                                 })
                             })
                     var search = $('<a class="btn btn-mini" title="Set wanted"><i class="icon-heart"></i></a></td>').click(function () {
                                 $.ajax({
                                     url: WEBDIR + 'mylar/QueueAlbum',
-                                    data: {'albumId': wanted.AlbumID},
+                                    data: {'albumId': wanted.ComicID},
                                     type: 'get',
                                     complete: function (result) {
-                                        notify('Set wanted', wanted.ArtistName + ' - ' + wanted.AlbumTitle);
+                                        notify('Set wanted', wanted.ComicName + ' - ' + wanted.IssueName);
                                     }
                                 })
                             })
                     var force = $('<a class="btn btn-mini" title="Force Check"><i class="icon-search"></i></a></td>').click(function () {
                                 $.ajax({
                                     url: WEBDIR + 'mylar/QueueAlbum&new=True',
-                                    data: {'albumId': wanted.AlbumID},
+                                    data: {'albumId': wanted.ComicID},
                                     type: 'get',
                                     complete: function (result) {
-                                        notify('Force Check', wanted.ArtistName + ' - ' + wanted.AlbumTitle);
+                                        notify('Force Check', wanted.ComicName + ' - ' + wanted.IssueName);
                                     }
                                 })
                             })
@@ -288,14 +291,15 @@ function loadWanteds() {
                     row.append(
                         $('<td>').append(
                             $('<a>')
-                                .addClass('mylar_wanted_artistname')
-                                .attr('href', WEBDIR + 'mylar/viewArtist/' + wanted.ArtistID)
-                                .text(wanted.ArtistName)),
+                                .addClass('mylar_wanted_comicname')
+                                .attr('href', WEBDIR + 'mylar/viewcomic/' + wanted.ComicID)
+                                .text(wanted.ComicName)),
                         $('<td>').append(
                             $('<a>')
-                                .addClass('mylar_wanted_artistalbum')
-                                .attr('href', WEBDIR + 'mylar/viewAlbum/' + wanted.AlbumID)
-                                .text(wanted.AlbumTitle)),
+                                .addClass('mylar_wanted_comicalbum')
+                                .attr('href', WEBDIR + 'mylar/viewissue/' + wanted.IssueID)
+                                .text(wanted.IssueName)),
+                        $('<td>').text(wanted.Issue_Number),
                         $('<td>').text(wanted.ReleaseDate),
                         $('<td>').append(mylarStatusLabel(wanted.Status)),
                         $('<td>').append(div)
