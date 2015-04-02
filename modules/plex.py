@@ -53,7 +53,9 @@ class Plex(object):
                 {'type': 'text', 'label': 'Mac addr.', 'name': 'plex_mac'},
                 {'type': 'bool', 'label': 'Hide watched', 'name': 'plex_hide_watched'},
                 {'type': 'bool', 'label': 'Hide homemovies', 'name': 'plex_hide_homemovies'},
-                {'type': 'bool', 'label': 'Disable image resize', 'name': 'plex_disable_img_resize'}
+                {'type': 'bool', 'label': 'Disable image resize', 'name': 'plex_disable_img_resize'},
+                {"type": "text", "label": "Reverse proxy link", "placeholder": "", "desc":"Reverse proxy link ex: https://plex.mydomain.com", "name": "plex_reverse_proxy_link"},
+
             ]
         })
 
@@ -86,6 +88,10 @@ class Plex(object):
         plex_port = htpc.settings.get('plex_port', '32400')
 
         url = 'http://%s:%s/web' % (plex_host, plex_port)
+
+        if htpc.settins.get('plex_reverse_proxy_link'):
+            url = htpc.settins.get('plex_reverse_proxy_link')
+            return url
 
         raise cherrypy.HTTPRedirect(url)
 
