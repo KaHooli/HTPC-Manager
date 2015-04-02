@@ -52,7 +52,8 @@ class Plex(object):
                 {'type': 'password', 'label': 'Password (optional)', 'desc': 'Plex Home actived server req password', 'name': 'plex_password'},
                 {'type': 'text', 'label': 'Mac addr.', 'name': 'plex_mac'},
                 {'type': 'bool', 'label': 'Hide watched', 'name': 'plex_hide_watched'},
-                {'type': 'bool', 'label': 'Hide homemovies', 'name': 'plex_hide_homemovies'}
+                {'type': 'bool', 'label': 'Hide homemovies', 'name': 'plex_hide_homemovies'},
+                {'type': 'bool', 'label': 'Disable image resize', 'name': 'plex_disable_img_resize'}
             ]
         })
 
@@ -250,14 +251,21 @@ class Plex(object):
     @require()
     def GetThumb(self, thumb=None, h=None, w=None, o=100):
         ''' Parse thumb to get the url and send to htpc.proxy.get_image '''
+        if htpc.settings.get('plex_disable_img_resize', False):
+            self.logger.debug("Image resize is disabled")
+            h = None
+            w = None
+
         if thumb:
-            if o > 100:
+            if o >= 100:
                 url = 'http://%s:%s%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), thumb)
+                self.logger.debug('pil')
             else:
                 # If o < 100 transcode on Plex server to widen format support
                 url = 'http://%s:%s/photo/:/transcode?height=%s&width=%s&url=%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), h, w, urllib.quote_plus('http://%s:%s%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), thumb)))
                 h = None
                 w = None
+                self.logger.debug("transcode")
         else:
             url = '/images/DefaultVideo.png'
 
