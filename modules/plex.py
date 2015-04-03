@@ -89,8 +89,8 @@ class Plex(object):
 
         url = 'http://%s:%s/web' % (plex_host, plex_port)
 
-        if htpc.settins.get('plex_reverse_proxy_link'):
-            url = htpc.settins.get('plex_reverse_proxy_link')
+        if htpc.settings.get('plex_reverse_proxy_link'):
+            url = htpc.settings.get('plex_reverse_proxy_link')
             return url
 
         raise cherrypy.HTTPRedirect(url)
