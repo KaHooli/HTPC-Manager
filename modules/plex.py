@@ -17,6 +17,18 @@ from cherrypy.lib.auth2 import require
 import requests
 import platform
 from uuid import getnode
+
+# Only imported to check if pil is installed
+try:
+    import Image
+    use_pil = True
+except ImportError:
+    try:
+        from PIL import Image
+        use_pil = True
+    except ImportError:
+        use_pil = False
+
 '''
 Credits.
 
@@ -256,22 +268,22 @@ class Plex(object):
     @cherrypy.expose()
     @require()
     def GetThumb(self, thumb=None, h=None, w=None, o=100):
-        ''' Parse thumb to get the url and send to htpc.proxy.get_image '''
+        ''' Parse thumb to get the url and send to htpc.helpers.get_image '''
+        fake = False
         if htpc.settings.get('plex_disable_img_resize', False):
             self.logger.debug("Image resize is disabled")
             h = None
             w = None
-
         if thumb:
-            if o >= 100:
+            #if fake:
+            if use_pil:
+                # Use pil is its enabled as quality is 95
                 url = 'http://%s:%s%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), thumb)
                 self.logger.debug('pil')
             else:
-                # If o < 100 transcode on Plex server to widen format support
-                url = 'http://%s:%s/photo/:/transcode?height=%s&width=%s&url=%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), h, w, urllib.quote_plus('http://%s:%s%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), thumb)))
-                h = None
-                w = None
-                self.logger.debug("transcode")
+                # Fallback to transcode if pil isnt installed, plex quality 75
+                url = 'http://%s:%s/photo/:/transcode?height=%s&width=%s&opacity=%s&saturation=%s&url=%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), h, w, o, 100, urllib.quote_plus('http://%s:%s%s' % (htpc.settings.get('plex_host', 'localhost'), htpc.settings.get('plex_port', '32400'), thumb)))
+                self.logger.debug('transcode')
         else:
             url = '/images/DefaultVideo.png'
 
